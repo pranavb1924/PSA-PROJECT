@@ -94,6 +94,8 @@ Recommended: Oracle OpenJDK 18.0.2
 
 1. Navigate to the `TicTacToe` class (please refer to Navigation) and run the main function
 
+    Run `java TicTacToe.java` on the command line
+
 2. Select a game mode
 
     ```
@@ -126,6 +128,8 @@ Recommended: Oracle OpenJDK 18.0.2
 ### Running a game of Othello
 
 1. Navigate to the `Othello` class (please refer to Navigation) and run the main function
+    
+    Run `java Othello.java` on the command line
 
 2. Select a game mode
 
