@@ -155,12 +155,13 @@ public class Position {
      * Returns the specified diagonal.
      * If main is true, returns the main diagonal; otherwise the anti-diagonal.
      */
-    public int[] projectDiag(boolean main) {
-        int[] diag = new int[SIZE];
-        for (int i = 0; i < SIZE; i++) {
-            diag[i] = main ? grid[i][i] : grid[i][SIZE - 1 - i];
+    int[] projectDiag(boolean b) {
+        int[] result = new int[SIZE];
+        for (int j = 0; j < SIZE; j++) {
+            int i = b ? j : SIZE - j - 1;
+            result[j] = grid[i][j];
         }
-        return diag;
+        return result;
     }
 
     /**
