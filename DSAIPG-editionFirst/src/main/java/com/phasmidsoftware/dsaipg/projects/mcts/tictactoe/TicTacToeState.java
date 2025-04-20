@@ -15,8 +15,6 @@ public class TicTacToeState implements State<TicTacToe> {
     private final Position position;
 
     public TicTacToeState(Position position) {
-        // Pass the game reference; here we create a new TicTacToe instance.
-        // Alternatively, if you already have a game reference, pass it in.
         this.game = new TicTacToe();
         this.position = position;
     }
@@ -57,7 +55,6 @@ public class TicTacToeState implements State<TicTacToe> {
         Collection<Move<TicTacToe>> moves = new ArrayList<>();
         for (int[] rc : coords) {
             moves.add(new TicTacToe.TicTacToeMove(p, rc[0], rc[1])); 
-            // You can alternatively use: new TicTacToe.TicTacToeMove(p, rc[0], rc[1])
         }
         return moves;
     }

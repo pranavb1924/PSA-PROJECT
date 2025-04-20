@@ -11,9 +11,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
-/**
- * A final fixed Monte Carlo Tree Search for TicTacToe with guaranteed threat detection.
- */
 public class MCTS {
 
     private static final double EXPLORATION_PARAMETER = 1.0;
@@ -244,7 +241,7 @@ public class MCTS {
     // Use UCB to select a child node, recursing down until we reach a leaf
     private TicTacToeNode select(TicTacToeNode node) {
         if (node == null) {
-            // Fix #1: Add null check at the beginning
+            
             if (logger != null) logger.accept("Selection: received null node");
             return null;
         }
@@ -276,8 +273,7 @@ public class MCTS {
                 bestChild = tChild;
             }
         }
-        
-        // Fix #2: Check if bestChild is null before recursing
+
         if (bestChild == null) {
             if (logger != null) logger.accept("Selection: no best child found, returning current node");
             return node;

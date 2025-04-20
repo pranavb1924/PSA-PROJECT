@@ -57,10 +57,7 @@ public class Position {
         if (board[row][col] != EMPTY) {
             throw new IllegalStateException("Cell already occupied at " + row + "," + col);
         }
-        
-        // We won't check if the same player is moving twice in this method
-        // That should be handled at the State level
-        
+
         // Check if this is a valid move (flips at least one piece)
         List<int[]> flips = getFlips(player, row, col);
         if (flips.isEmpty()) {
@@ -142,9 +139,6 @@ public class Position {
      * Returns a list of available moves for the given player.
      */
     public List<int[]> moves(int player) {
-        // We won't check if the same player is moving twice in this method
-        // That should be handled at the State level
-        
         List<int[]> validMoves = new ArrayList<>();
         
         // Check each empty cell for valid moves

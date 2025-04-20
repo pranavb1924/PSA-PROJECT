@@ -11,9 +11,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
-/**
- * Enhanced Monte Carlo Tree Search for Othello with strategic heuristics.
- */
 public class MCTS {
 
     private static final double EXPLORATION_PARAMETER = 1.0;
@@ -51,9 +48,6 @@ public class MCTS {
         this.logger = logger;
     }
 
-    /**
-     * The main MCTS search with strategic enhancements for Othello
-     */
     public Node<Othello> searchIterations(int iterations) {
         // Check for strategic moves first
         OthelloState state = (OthelloState) root.state();
@@ -152,48 +146,6 @@ public class MCTS {
     }
     
     /**
-     * Get pieces that would be flipped with a move at the given position
-     */
-    private List<int[]> getFlipsInPosition(Position position, int player, int row, int col) {
-        List<int[]> flips = new ArrayList<>();
-        int[][] directions = {
-            {-1, -1}, {-1, 0}, {-1, 1},
-            {0, -1},           {0, 1},
-            {1, -1},  {1, 0},  {1, 1}
-        };
-        
-        int opponent = 1 - player;
-        int size = Position.getSize();
-        int[][] board = getBoardArray(position);
-        
-        // First check if cell is empty
-        if (board[row][col] != Position.EMPTY) {
-            return flips; // Return empty list if cell is occupied
-        }
-        
-        // Check each direction
-        for (int[] dir : directions) {
-            List<int[]> dirFlips = new ArrayList<>();
-            int r = row + dir[0];
-            int c = col + dir[1];
-            
-            // Continue in this direction as long as we find opponent's pieces
-            while (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == opponent) {
-                dirFlips.add(new int[]{r, c});
-                r += dir[0];
-                c += dir[1];
-            }
-            
-            // If we hit our own piece, all opponent pieces in between get flipped
-            if (r >= 0 && r < size && c >= 0 && c < size && board[r][c] == player && !dirFlips.isEmpty()) {
-                flips.addAll(dirFlips);
-            }
-        }
-        
-        return flips;
-    }
-    
-    /**
      * Create a node representing this move
      */
     private Node<Othello> createMoveNode(Move<Othello> move) {
@@ -205,18 +157,11 @@ public class MCTS {
             if (logger != null) {
                 logger.accept("Error creating move node: " + e.getMessage());
             }
-            // If there's an error, just return the root node
+
             return root;
         }
     }
     
-    /**
-     * Get the board as a 2D array for easier manipulation
-     */
-    private int[][] getBoardArray(Position position) {
-        return position.getBoard();
-    }
-
     // Expand node by generating children from all possible moves
     private void expandNode(OthelloNode node) {
         State<Othello> state = node.state();
@@ -242,7 +187,7 @@ public class MCTS {
 
     // Use UCB to select a child node, recursing down until we reach a leaf
     private OthelloNode select(OthelloNode node) {
-        // Fix #1: Add null check at the beginning
+
         if (node == null) {
             if (logger != null) logger.accept("Selection: received null node");
             return null;
@@ -276,7 +221,6 @@ public class MCTS {
             }
         }
         
-        // Fix #2: Check if bestChild is null before recursing
         if (bestChild == null) {
             if (logger != null) logger.accept("Selection: no best child found, returning current node");
             return node;

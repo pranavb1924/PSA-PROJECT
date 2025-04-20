@@ -285,8 +285,6 @@ public class TicTacToe implements Game<TicTacToe> {
                 // Run a full game with current iteration count
                 State<TicTacToe> state = start();
                 int currentPlayer = opener();
-                
-                // Silent mode for benchmark
                 while (!state.isTerminal()) {
                     if (currentPlayer == X) {
                         // MCTS player as X
