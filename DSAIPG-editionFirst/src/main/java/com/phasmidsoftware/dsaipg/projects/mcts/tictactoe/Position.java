@@ -7,278 +7,221 @@ import java.util.Optional;
 
 public class Position {
 
+    public static final int blank = -1;
+    private static final int SIZE = 3;
+    private final int[][] grid;
+    private final int last;    // last player who moved
+    private final int count;   // number of moves made
+
+    public Position(int[][] grid, int count, int last) {
+        this.grid = grid;
+        this.count = count;
+        this.last = last;
+    }
+
     /**
-     * Parse a string of X, O, and . to form a Position.
-     *
-     * @param grid the grid represented as a String.
-     * @param last the last player.
-     * @return a Position.
+     * Parses a string representation into a Position.
+     * Example: ". . .\n. . .\n. . ." with last.
      */
-    static Position parsePosition(final String grid, final int last) {
-        int[][] matrix = new int[gridSize][gridSize];
+    public static Position parsePosition(String gridStr, int last) {
+        String[] rows = gridStr.split("\\n");
+        int[][] grid = new int[SIZE][SIZE];
         int count = 0;
-        String[] rows = grid.split("\\n", gridSize);
-        for (int i = 0; i < gridSize; i++) {
-            String[] cells = rows[i].split(" ", gridSize);
-            for (int j = 0; j < gridSize; j++) {
-                int cell = parseCell(cells[j].trim());
-                if (cell >= 0) count++;
-                matrix[i][j] = cell;
-            }
-        }
-        return new Position(matrix, count, last);
-    }
-
-    /**
-     * Method to parse a single cell.
-     *
-     * @param cell the String for the cell.
-     * @return a number between -1 and one inclusive.
-     */
-    static int parseCell(String cell) {
-        return switch (cell.toUpperCase()) {
-            case "O", "0" -> 0;
-            case "X", "1" -> 1;
-            default -> -1;
-        };
-    }
-
-    /**
-     * Effect a player's move on this Position.
-     *
-     * @param player the player (0: O, 1: X)
-     * @param x      the first dimension value.
-     * @param y      the second dimension value.
-     * @return the new Position.
-     */
-    public Position move(int player, int x, int y) {
-        if (full()) throw new RuntimeException("Position is full");
-        if (player == last) throw new RuntimeException("consecutive moves by same player: " + player);
-        int[][] matrix = copyGrid();
-        if (matrix[x][y] < 0) {
-            // Update the cell with the player's mark.
-            matrix[x][y] = player;
-            // Increase the count of moves made.
-            return new Position(matrix, count + 1, player);
-        }
-        throw new RuntimeException("Position is occupied: " + x + ", " + y);
-    }
-
-    /**
-     * Method to yield all the possible moves available on this Position.
-     *
-     * @return a list of [x,y] arrays.
-     */
-    public List<int[]> moves(int player) {
-        if (player == last) throw new RuntimeException("consecutive moves by same player: " + player);
-        List<int[]> result = new ArrayList<>();
-        for (int i = 0; i < gridSize; i++) {
-            for (int j = 0; j < gridSize; j++) {
-                if (grid[i][j] < 0) {
-                    result.add(new int[]{i, j});
+        for (int i = 0; i < SIZE; i++) {
+            String[] tokens = rows[i].trim().split(" ");
+            for (int j = 0; j < SIZE; j++) {
+                int val = parseCell(tokens[j]);
+                grid[i][j] = val;
+                if (val != blank) {
+                    count++;
                 }
             }
         }
-        return result;
+        return new Position(grid, count, last);
     }
 
     /**
-     * Method to yield a copy of this Position but reflected.
-     * <p>
-     * TESTME
-     *
-     * @param axis the axis about which to reflect.
-     * @return a new Position.
+     * Parses an individual cell.
+     * "X" or "1" returns 1; "O" or "0" returns 0; anything else returns blank.
      */
-    public Position reflect(int axis) {
-        int[][] matrix = copyGrid();
-        switch (axis) {
-            case 0:
-                for (int j = 0; j < gridSize; j++) swap(matrix, 0, j, 2, j);
-                break;
-            case 1:
-                for (int i = 0; i < gridSize; i++) swap(matrix, i, 0, i, 2);
-                break;
-            default:
-                throw new RuntimeException("reflect not implemented for " + axis);
+    public static int parseCell(String cell) {
+        cell = cell.trim();
+        if (cell.equalsIgnoreCase("X") || cell.equals("1"))
+            return 1;
+        else if (cell.equalsIgnoreCase("O") || cell.equals("0"))
+            return 0;
+        else
+            return blank;
+    }
+
+    /**
+     * Returns a new Position resulting from applying the move.
+     */
+    public Position move(int player, int row, int col) {
+        if (full())
+            throw new RuntimeException("Board is full");
+        if (grid[row][col] != blank)
+            throw new RuntimeException("Cell already occupied");
+        if (player == last)
+            throw new RuntimeException("Consecutive moves by same player not allowed");
+        int[][] newGrid = new int[SIZE][SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            newGrid[i] = Arrays.copyOf(grid[i], SIZE);
         }
-        return new Position(matrix, count, last);
+        newGrid[row][col] = player;
+        return new Position(newGrid, count + 1, player);
     }
 
     /**
-     * Method to rotate this Position by 90 degrees clockwise.
-     * TESTME
-     *
-     * @return a new Position which is rotated from this.
+     * Returns a list of available moves for the given player.
      */
-    public Position rotate() {
-        int[][] matrix = new int[gridSize][gridSize];
-        for (int i = 0; i < gridSize; i++)
-            for (int j = 0; j < gridSize; j++)
-                matrix[i][j] = grid[j][gridSize - i - 1];
-        return new Position(matrix, count, last);
+    public List<int[]> moves(int player) {
+        if (player == last)
+            throw new RuntimeException("Cannot move twice in a row");
+        List<int[]> list = new ArrayList<>();
+        for (int i = 0; i < SIZE; i++)
+            for (int j = 0; j < SIZE; j++)
+                if (grid[i][j] == blank)
+                    list.add(new int[]{i, j});
+        return list;
+    }
+
+    public boolean full() {
+        return count == SIZE * SIZE;
     }
 
     /**
-     * Determine if this Position represents a winner.
-     *
-     * @return an Optional Integer.
+     * Returns an Optional with the winning player if three in a row exist.
      */
     public Optional<Integer> winner() {
-        if (count > 4 && threeInARow()) return Optional.of(last);
-        return Optional.empty();
+        if (count < 5)
+            return Optional.empty();
+        return threeInARow() ? Optional.of(last) : Optional.empty();
     }
 
     /**
-     * Method to determine if this Position has three in a row (i.e. a winning position).
-     * Don't forget to check for columns and diagonals as well.
-     *
-     * @return true if there are three cells in a line that are the same and equal to the last player.
+     * Returns true if there exists a row, column, or diagonal where all cells match.
      */
-    boolean threeInARow() {
-        // Check rows and columns.
-        for (int i = 0; i < gridSize; i++) {
-            if (allEqual(projectRow(i))) return true;
-            if (allEqual(projectCol(i))) return true;
+    public boolean threeInARow() {
+        // Check rows.
+        for (int i = 0; i < SIZE; i++) {
+            int[] row = projectRow(i);
+            if (Arrays.equals(row, createWinningLine(row[0])))
+                return true;
         }
-        // Check the two diagonals.
-        return allEqual(projectDiag(true)) || allEqual(projectDiag(false));
-    }
-    
-    private boolean allEqual(int[] line) {
-        return line[0] != blank && line[0] == line[1] && line[1] == line[2];
-    }
-
-    /**
-     * Project row i.
-     *
-     * @param i the row index.
-     * @return an array of three ints.
-     */
-    int[] projectRow(int i) {
-        return grid[i];
-    }
-
-    /**
-     * Project column j.
-     *
-     * @param j the column index.
-     * @return an array of three ints.
-     */
-    int[] projectCol(int j) {
-        int[] result = new int[gridSize];
-        for (int i = 0; i < gridSize; i++)
-            result[i] = grid[i][j];
-        return result;
-    }
-
-    /**
-     * Get the diagonal according to b.
-     *
-     * @param b true if the main diagonal else the anti-diagonal.
-     * @return an int[3].
-     */
-    int[] projectDiag(boolean b) {
-        int[] result = new int[gridSize];
-        for (int j = 0; j < gridSize; j++) {
-            int i = b ? j : gridSize - j - 1;
-            result[j] = grid[i][j];
+        // Check columns.
+        for (int j = 0; j < SIZE; j++) {
+            int[] col = projectCol(j);
+            if (Arrays.equals(col, createWinningLine(col[0])))
+                return true;
         }
-        return result;
+        // Check main diagonal.
+        int[] diag1 = projectDiag(true);
+        if (Arrays.equals(diag1, createWinningLine(diag1[0])))
+            return true;
+        // Check anti-diagonal.
+        int[] diag2 = projectDiag(false);
+        if (Arrays.equals(diag2, createWinningLine(diag2[0])))
+            return true;
+        return false;
+    }
+
+    private int[] createWinningLine(int sample) {
+        int winVal = (sample != blank) ? sample : last;
+        int[] line = new int[SIZE];
+        Arrays.fill(line, winVal);
+        return line;
     }
 
     /**
-     * @return true if this Position has 9 elements.
+     * Returns a copy of row i.
      */
-    boolean full() {
-        return count == 9;
+    public int[] projectRow(int i) {
+        return Arrays.copyOf(grid[i], SIZE);
     }
 
     /**
-     * Method to render this Position in a pleasing manner.
-     *
-     * @return a String.
+     * Returns an array representing column j.
+     */
+    public int[] projectCol(int j) {
+        int[] col = new int[SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            col[i] = grid[i][j];
+        }
+        return col;
+    }
+
+    /**
+     * Returns the specified diagonal.
+     * If main is true, returns the main diagonal; otherwise the anti-diagonal.
+     */
+    public int[] projectDiag(boolean main) {
+        int[] diag = new int[SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            diag[i] = main ? grid[i][i] : grid[i][SIZE - 1 - i];
+        }
+        return diag;
+    }
+
+    /**
+     * Renders the board for display.
      */
     public String render() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < gridSize; i++) {
-            for (int j = 0; j < gridSize; j++) {
-                sb.append(render(grid[i][j]));
-                if (j < gridSize - 1) sb.append(' ');
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                char ch;
+                if (grid[i][j] == 1)
+                    ch = 'X';
+                else if (grid[i][j] == 0)
+                    ch = 'O';
+                else
+                    ch = '.';
+                sb.append(ch);
+                if (j < SIZE - 1)
+                    sb.append(" ");
             }
-            if (i < gridSize - 1) sb.append('\n');
+            if (i < SIZE - 1)
+                sb.append("\n");
         }
         return sb.toString();
     }
 
+    /**
+     * toString returns a comma-separated representation of rows.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < gridSize; i++) {
-            for (int j = 0; j < gridSize; j++) {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
                 sb.append(grid[i][j]);
-                if (j < gridSize - 1) sb.append(',');
+                if (j < SIZE - 1)
+                    sb.append(",");
             }
-            if (i < gridSize - 1) sb.append('\n');
+            if (i < SIZE - 1)
+                sb.append("\n");
         }
         return sb.toString();
+    }
+
+    public int lastPlayer() {
+        return last;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Position position)) return false;
-        return Arrays.deepEquals(grid, position.grid);
+        if (!(o instanceof Position)) return false;
+        Position other = (Position) o;
+        return count == other.count && last == other.last && Arrays.deepEquals(grid, other.grid);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.deepHashCode(grid);
-    }
-
-    Position(int[][] grid, int count, int last) {
-        this.grid = grid;
-        this.count = count;
-        this.last = last;
-        // "xxx" is not used in this implementation.
-        xxx = new int[]{last, last, last};
-    }
-
-    private int[][] copyGrid() {
-        int[][] result = new int[gridSize][gridSize];
-        for (int i = 0; i < gridSize; i++)
-            result[i] = Arrays.copyOf(grid[i], gridSize);
+        int result = Arrays.deepHashCode(grid);
+        result = 31 * result + count;
+        result = 31 * result + last;
         return result;
     }
-
-    private char render(int x) {
-        return switch (x) {
-            case 0 -> 'O';
-            case 1 -> 'X';
-            default -> '.';
-        };
-    }
-
-    /**
-     * Swaps two cells in the matrix.
-     *
-     * @param matrix the matrix.
-     * @param i1     first row.
-     * @param j1     first column.
-     * @param i2     second row.
-     * @param j2     second column.
-     */
-    private void swap(int[][] matrix, int i1, int j1, int i2, int j2) {
-        int temp = matrix[i1][j1];
-        matrix[i1][j1] = matrix[i2][j2];
-        matrix[i2][j2] = temp;
-    }
-
-    private final int[][] grid;
-    final int last;
-    private final int count;
-    private final static int gridSize = 3;
-    private final int[] xxx;
-
-    public static final int blank = -1;
 }
