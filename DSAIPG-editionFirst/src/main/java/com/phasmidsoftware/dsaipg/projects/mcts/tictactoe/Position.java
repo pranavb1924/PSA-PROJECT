@@ -72,6 +72,65 @@ public class Position {
         return new Position(newGrid, count + 1, player);
     }
 
+    private int[][] copyGrid() {
+        int[][] result = new int[SIZE][SIZE];
+        for (int i = 0; i < SIZE; i++)
+            result[i] = Arrays.copyOf(grid[i], SIZE);
+        return result;
+    }
+
+    /**
+     * Method to yield a copy of this Position but reflected.
+     * <p>
+     * TESTME
+     *
+     * @param axis the axis about which to reflect.
+     * @return a new Position.
+     */
+    public Position reflect(int axis) {
+        int[][] matrix = copyGrid();
+        switch (axis) {
+            case 0:
+                for (int j = 0; j < SIZE; j++) swap(matrix, 0, j, 2, j); // middle row
+                break;
+            case 1:
+                for (int i = 0; i < SIZE; i++) swap(matrix, i, 0, i, 2); // middle column
+                break;
+            default:
+                throw new RuntimeException("reflect not implemented for " + axis);
+        }
+        return new Position(matrix, count, last);
+    }
+
+    /**
+     * Method to rotate this Position by 90 degrees clockwise.
+     * TESTME
+     *
+     * @return a new Position which is rotated from this.
+     */
+    public Position rotate() {
+        int[][] matrix = new int[SIZE][SIZE];
+        for (int i = 0; i < SIZE; i++)
+            for (int j = 0; j < SIZE; j++)
+                matrix[j][SIZE - 1 - i] = grid[i][j];
+        return new Position(matrix, count, last);
+    }
+
+    /**
+     * TESTME
+     *
+     * @param matrix the matrix to be operated on.
+     * @param i1     first row.
+     * @param j1     first column.
+     * @param i2     second row.
+     * @param j2     second column.
+     */
+    private void swap(int[][] matrix, int i1, int j1, int i2, int j2) {
+        int temp = matrix[i1][j1];
+        matrix[i1][j1] = matrix[i2][j2];
+        matrix[i2][j2] = temp;
+    }
+
     /**
      * Returns a list of available moves for the given player.
      */
